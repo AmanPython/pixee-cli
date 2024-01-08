@@ -346,10 +346,14 @@ def fix(
                 console.print(Markdown(f"```diff\n{entry['diff']}```"))
             prompt("Press Enter to continue...")
 
-    result_file = Path(output or DEFAULT_CODETF_PATH)
+    no_of_fixes = sum(
+        len(result.get("changeset", [])) for result in combined_codetf["results"]
+    )
 
-    Path(result_file).write_text(json.dumps(combined_codetf, indent=2))
-    console.print(f"Results written to {result_file}", style="bold")
+    if no_of_fixes:
+        result_file = Path(output or DEFAULT_CODETF_PATH)
+        Path(result_file).write_text(json.dumps(combined_codetf, indent=2))
+        console.print(f"Results written to {result_file}", style="bold")
 
     summarize_results(combined_codetf)
 
@@ -384,6 +388,10 @@ def explain(path):
 
     console.print(f"Reading results from `{result_file}`", style="bold")
     summarize_results(combined_codetf)
+
+    if not results:
+        return 0
+
     if (
         codemod := select(
             "Which codemod result would you like to explain?",
